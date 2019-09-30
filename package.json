@@ -10,11 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.16.4",
-    "express-dot-async": "^0.2.1",
-    "multer": "^1.4.1"
+    "crypto-random-string": "^3.0.1",
+    "express": "^4.17.1",
+    "multer": "^1.4.2"
   },
   "devDependencies": {
-    "nodemon": "^1.19.0"
+    "nodemon": "^1.19.3"
   }
 }

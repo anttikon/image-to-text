@@ -1,24 +1,19 @@
-FROM node:10.15.0-slim
+FROM node:12.10.0-alpine
 
-RUN apt-get update
-
-RUN apt install -y software-properties-common
-RUN apt install -y tesseract-ocr
-RUN apt install -y tesseract-ocr-all
-RUN apt install -y imagemagick
+RUN apk add tesseract-ocr
+RUN apk add tesseract-ocr-data-fin
+RUN apk add imagemagick
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
+
+RUN mkdir /usr/src/app/uploads
 
 COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
 RUN npm install
 
 COPY ./src /usr/src/app/src
-COPY ./client /usr/src/app/client
-COPY ./misc /usr/src/app/misc
-
-RUN mkdir /usr/src/app/uploads
 
 EXPOSE 8382
 

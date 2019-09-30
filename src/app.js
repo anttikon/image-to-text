@@ -1,46 +1,29 @@
 const express = require('express')
 const multer = require('multer')
-const asyncify = require('express')
+const cryptoRandomString = require('crypto-random-string')
 const {runLocalCommand} = require('./utils')
 
-const filepath = 'uploads'
-
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, `${filepath}/`)
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname)
-  },
+  destination: (req, file, cb) => cb(null, `uploads/`),
+  filename: (req, file, cb) => cb(null, `${cryptoRandomString({length: 10})}_${file.originalname}`),
 })
 
-const upload = multer({storage: storage})
+const upload = multer({storage: storage, limits: {fileSize: 5000000, fieldNameSize: 25}})
 const app = express()
-app.async = asyncify(app)
+
+app.post('/image', upload.single('image'), (req, res) =>
+  runLocalCommand('tesseract', [req.file.path, 'stdout', '-l', 'fin'])
+    .then(data => res.json(data))
+    .catch(e => {
+      console.error(e)
+      res.status(500).end()
+    }),
+)
+
+app.use(function (err, req, res, next) {
+  console.error(err.stack)
+  res.status(500).end()
+})
 
 const port = process.env.PORT || 8382
-
-function getFilePaths(originalName) {
-  return {
-    originalPath: `${filepath}/${originalName}`,
-    resultPath: `${filepath}/${originalName}.txt`,
-  }
-}
-
-app.post('/image', upload.single('image'), async (req, res) => {
-  const {originalPath, resultPath} = getFilePaths(req.file.originalname)
-
-  try {
-    await runLocalCommand('tesseract', [originalPath, originalPath, '-l', 'fin'])
-    const result = await runLocalCommand('cat', [resultPath])
-
-    runLocalCommand('rm', [originalPath])
-    runLocalCommand('rm', [resultPath])
-
-    res.send(result)
-  } catch (e) {
-    res.status(500).send(e)
-  }
-})
-
 app.listen(port, () => console.log(`image-to-text listening on port ${port}!`))
